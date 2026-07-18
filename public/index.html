@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor de Energía en la Nube</title>
+  <style>
+    :root {
+      --bg-online: #0f172a;
+      --card-online: #1e293b;
+      --text-main: #f8fafc;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    body {
+      background-color: var(--bg-online);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.5s ease;
+    }
+
+    .container {
+      text-align: center;
+      background: var(--card-online);
+      padding: 3rem;
+      border-radius: 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      max-width: 450px;
+      width: 90%;
+      transition: all 0.5s ease;
+    }
+
+    .status-indicator {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: var(--accent-green);
+      margin: 0 auto 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 30px var(--accent-green);
+      transition: all 0.5s ease;
+    }
+
+    .status-indicator svg { width: 50px; height: 50px; fill: white; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; font-weight: 700; }
+    p { color: #94a3b8; font-size: 1rem; }
+
+    /* Estilos cuando se va la luz */
+    body.offline { background-color: #1e0a0a; }
+    body.offline .container { background-color: #2d1414; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.2); }
+    body.offline .status-indicator {
+      background-color: var(--accent-red);
+      box-shadow: 0 0 40px var(--accent-red);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="status-indicator" id="indicator">
+      <svg viewBox="0 0 24 24"><path d="M11.5 22C11.22 22 10.95 21.89 10.74 21.69C10.43 21.38 10.32 20.93 10.47 20.51L12.56 14H7.5C7.07 14 6.69 13.72 6.55 13.31C6.41 12.9 6.53 12.45 6.85 12.16L13.5 6.16C13.84 5.85 14.34 5.8 14.73 6.03C15.12 6.26 15.31 6.72 15.2 7.15L13.44 14H17.5C17.91 14 18.28 14.26 18.43 14.65C18.58 15.04 18.47 15.48 18.16 15.76L12.5 21.66C12.22 21.89 11.86 22 11.5 22Z"/></svg>
+    </div>
+    <h1 id="status-text">Cargando estado...</h1>
+    <p id="sub-text">Conectando con el servidor de monitoreo...</p>
+  </div>
+
+  <script>
+    const body = document.body;
+    const statusText = document.getElementById('status-text');
+    const subText = document.getElementById('sub-text');
+
+    async function checkStatus() {
+      try {
+        // Llama a la API interna de Vercel en la misma URL
+        const response = await fetch('/api/status');
+        const data = await response.json();
+
+        if (data.status === 'online') {
+          body.classList.remove('offline');
+          statusText.innerText = "Energía Estable";
+          subText.innerText = "La PC local está reportando señal por cable.";
+        } else {
+          body.classList.add('offline');
+          statusText.innerText = "⚠️ SIN LUZ / APAGADO";
+          subText.innerText = "Se perdió la conexión con la PC local.";
+        }
+      } catch (error) {
+        console.error("Error consultando la API:", error);
+      }
+    }
+
+    // Consultar el estado cada 3 segundos
+    setInterval(checkStatus, 3000);
+    checkStatus(); // Primera ejecución al cargar
+  </script>
+</body>
+</html>
